@@ -1,17 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/heshan-g/go-api/handlers"
 )
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GET /")
-}
-
 func main() {
-	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/", handlers.RootHandler)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
