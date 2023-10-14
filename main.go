@@ -9,6 +9,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", handlers.RootHandler)
+	http.HandleFunc("*", handlers.NotFoundHandler)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
