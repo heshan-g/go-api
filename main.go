@@ -28,7 +28,7 @@ func main() {
 	}
 
 	addr := fmt.Sprintf(":%d", port)
-	fmt.Printf("Starting on port %s\n", addr)
+	fmt.Printf("Listening on port %s\n--\n", addr)
 	err := http.ListenAndServe(addr, mainMux)
 	if err != nil {
 		log.Fatal(err)
