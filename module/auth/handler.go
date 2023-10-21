@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -26,9 +27,20 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 
 	var userCreds UserSignInCredentials
 
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&userCreds); err != nil {
-		http.Error(w, "Failed to parse body", http.StatusBadRequest)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(
+			w,
+			"Failed to parse request body",
+			http.StatusInternalServerError,
+		)
+	}
+	if err := json.Unmarshal(body, &userCreds); err != nil {
+		http.Error(
+			w,
+			"Failed to Unmarshal JSON",
+			http.StatusInternalServerError,
+		)
 	}
 
 	fmt.Printf("%+v\n", userCreds)
