@@ -1,32 +1,55 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
-func signInHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		postHandler(w, r)
-	}
+type UserSignInCredentials struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+type Response struct {
+	UserId      string `json:"userId"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	AccessToken string `json:"accessToken"`
+}
+
+func signInHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var userCreds UserSignInCredentials
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&userCreds); err != nil {
+		http.Error(w, "Failed to parse body", http.StatusBadRequest)
+	}
+
+	fmt.Printf("%+v\n", userCreds)
+
+	resp := Response{
+		UserId:      "123",
+		Name:        "Alice",
+		Email:       "alice@email.com",
+		AccessToken: "abc123",
+	}
+
+	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(
 			w,
-			"Failed to read request body",
-			http.StatusBadRequest,
+			"Failed to Marshal JSON",
+			http.StatusInternalServerError,
 		)
 	}
 
-	fmt.Printf("%v\n", string(body))
-
-	respBody := []byte("{ \"userId\": \"123\" }")
-
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(respBody)
+	w.Write(jsonResp)
 }
