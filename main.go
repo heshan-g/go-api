@@ -1,21 +1,36 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 
+	"github.com/heshan-g/go-api/config"
 	"github.com/heshan-g/go-api/module/auth"
 	"github.com/heshan-g/go-api/module/root"
 )
 
 func main() {
+	config.LoadDotEnv()
+
 	mainMux := http.NewServeMux()
 
 	mainMux.Handle("/", root.CreateMux())
 	mainMux.Handle("/auth/", auth.CreateMux())
 	mainMux.Handle("*", http.NotFoundHandler())
 
-	err := http.ListenAndServe(":8080", mainMux)
+	portStr := os.Getenv("PORT")
+	port, pErr := strconv.Atoi(portStr)
+	if pErr != nil {
+		log.Fatal("Error parsing PORT from env. ", pErr.Error())
+	}
+
+	fmt.Printf("Starting on port %d\n", port)
+
+	addr := fmt.Sprintf(":%d", port)
+	err := http.ListenAndServe(addr, mainMux)
 	if err != nil {
 		log.Fatal(err)
 	}
