@@ -34,6 +34,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 			"Failed to parse request body",
 			http.StatusInternalServerError,
 		)
+		return
 	}
 	if err := json.Unmarshal(body, &userCreds); err != nil {
 		http.Error(
@@ -41,6 +42,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 			"Failed to Unmarshal JSON",
 			http.StatusInternalServerError,
 		)
+		return
 	}
 
 	fmt.Printf("%+v\n", userCreds)
