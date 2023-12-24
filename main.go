@@ -10,6 +10,7 @@ import (
 	"github.com/heshan-g/go-api/config"
 	"github.com/heshan-g/go-api/module/auth"
 	"github.com/heshan-g/go-api/module/root"
+	"github.com/heshan-g/go-api/module/user"
 )
 
 func main() {
@@ -19,6 +20,7 @@ func main() {
 
 	mainMux.Handle("/", root.CreateMux())
 	mainMux.Handle("/auth/", auth.CreateMux())
+	mainMux.Handle("/user", user.CreateMux())
 	mainMux.Handle("*", http.NotFoundHandler())
 
 	portStr := os.Getenv("PORT")
