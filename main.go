@@ -15,6 +15,8 @@ import (
 
 func main() {
 	config.LoadDotEnv()
+	config.ConnectToDb()
+	defer config.DB.Close()
 
 	mainMux := http.NewServeMux()
 
