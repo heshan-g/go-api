@@ -4,7 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserSignInCredentials struct {
@@ -61,4 +66,46 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResp)
+}
+
+func signTokenHandler(w http.ResponseWriter, r *http.Request) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"foo": "bar",
+		"nbf": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
+	})
+	tokenString, err := token.SignedString([]byte("my_secret_key"))
+	if err != nil {
+		panic(err)
+	}
+	w.Write([]byte(tokenString + "\n"))
+}
+
+func verifyTokenHandler(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	_, tokenString, found := strings.Cut(authHeader, " ")
+	if authHeader == "" || !found {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("No Authorization header\n"))
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+		return []byte("my_secret_key"), nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		fmt.Println(claims["foo"], claims["nbf"])
+		w.Write([]byte(fmt.Sprintf("%+v\n", claims)))
+	} else {
+		fmt.Println(err)
+	}
 }
