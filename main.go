@@ -23,6 +23,9 @@ func main() {
 
 	r.Use(middleware.Logger)
 
+	r.Get("/health-check", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Server is healthy\n"))
+	})
 	r.Route("/auth", auth.Router)
 	r.Route("/users", users.Router)
 
