@@ -7,10 +7,11 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/heshan-g/go-api/config"
 	"github.com/heshan-g/go-api/module/auth"
-	"github.com/heshan-g/go-api/module/root"
-	"github.com/heshan-g/go-api/module/user"
+	"github.com/heshan-g/go-api/module/users"
 )
 
 func main() {
@@ -18,12 +19,12 @@ func main() {
 	config.ConnectToDb()
 	defer config.DB.Close()
 
-	mainMux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mainMux.Handle("/", root.CreateMux())
-	mainMux.Handle("/auth/", auth.CreateMux())
-	mainMux.Handle("/user", user.CreateMux())
-	mainMux.Handle("*", http.NotFoundHandler())
+	r.Use(middleware.Logger)
+
+	r.Route("/auth", auth.Router)
+	r.Route("/users", users.Router)
 
 	portStr := os.Getenv("PORT")
 	port, pErr := strconv.Atoi(portStr)
@@ -33,7 +34,7 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("Listening on port %s\n--\n", addr)
-	err := http.ListenAndServe(addr, mainMux)
+	err := http.ListenAndServe(addr, r)
 	if err != nil {
 		log.Fatal(err)
 	}

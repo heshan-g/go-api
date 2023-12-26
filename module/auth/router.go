@@ -1,11 +1,7 @@
 package auth
 
-import "net/http"
+import "github.com/go-chi/chi/v5"
 
-func CreateMux() *http.ServeMux {
-	authMux := http.NewServeMux()
-
-	authMux.HandleFunc("/auth/sign-in", signInHandler)
-
-	return authMux
+func Router(r chi.Router) {
+	r.Post("/sign-in", signInHandler)
 }

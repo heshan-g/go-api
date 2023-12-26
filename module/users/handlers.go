@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"encoding/json"
@@ -14,21 +14,8 @@ type User struct {
 	IsActive bool   `json:"isActive"`
 }
 
-func userHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-		case http.MethodGet:
-			getUsers(w, r)
-		default:
-			http.Error(
-				w,
-				"Request method not allowed",
-				http.StatusMethodNotAllowed,
-			)
-	}
-}
-
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	var db = config.DB
+	db := config.DB
 
 	rows, queryErr := db.Query(`
 		SELECT id, name, email, is_active
@@ -61,5 +48,4 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
-	return
 }
