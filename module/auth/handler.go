@@ -1,64 +1,59 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
-type UserSignInCredentials struct {
+type SignInCreds struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type Response struct {
-	UserId      string `json:"userId"`
-	Name        string `json:"name"`
-	Email       string `json:"email"`
-	AccessToken string `json:"accessToken"`
-}
-
 func signInHandler(w http.ResponseWriter, r *http.Request) {
-	var userCreds UserSignInCredentials
+	url := fmt.Sprintf(
+		"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s",
+		os.Getenv("FB_WEB_API_KEY"),
+	)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(
-			w,
-			"Failed to parse request body",
-			http.StatusInternalServerError,
-		)
-		return
+		panic(err)
 	}
-	if err := json.Unmarshal(body, &userCreds); err != nil {
-		http.Error(
-			w,
-			"Failed to Unmarshal JSON",
-			http.StatusInternalServerError,
-		)
-		return
+	r.Body.Close()
+
+	var signInCreds SignInCreds
+
+	if err := json.Unmarshal(body, &signInCreds); err != nil {
+		panic(err)
 	}
 
-	fmt.Printf("%+v\n", userCreds)
+	jsonStr := []byte(fmt.Sprintf(
+		`{"email": "%s", "password": "%s", "returnSecureToken": true}`,
+		signInCreds.Email,
+		signInCreds.Password,
+	))
 
-	resp := Response{
-		UserId:      "123",
-		Name:        "Alice",
-		Email:       "alice@email.com",
-		AccessToken: "abc123",
-	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
 
-	jsonResp, err := json.Marshal(resp)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(
-			w,
-			"Failed to Marshal JSON",
-			http.StatusInternalServerError,
-		)
+		panic(err)
 	}
+	defer resp.Body.Close()
+
+	fmt.Println("Response status: ", resp.Status)
+	fmt.Println("Response headers: ", resp.Header)
+	respBody, _ := io.ReadAll(resp.Body)
+	fmt.Println("Response body: ", string(respBody))
 
 	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResp)
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBody)
 }
