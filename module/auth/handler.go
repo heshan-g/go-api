@@ -28,19 +28,28 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	))
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		msg := fmt.Sprintf("Unexpected error (creating POST request): %s", err.Error())
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		msg := fmt.Sprintf("Unexpected error (making request): %s", err.Error())
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("Response status: ", resp.Status)
-	fmt.Println("Response headers: ", resp.Header)
-	respBody, _ := io.ReadAll(resp.Body)
-	fmt.Println("Response body: ", string(respBody))
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		msg := fmt.Sprintf("Unexpected error (reading Firebase response body): %s", err.Error())
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(resp.StatusCode)
 	w.Write(respBody)

@@ -24,7 +24,10 @@ func ValidateRequestBody[T interface{}]() func(http.Handler) http.Handler {
 
 			if err := dec.Decode(&b); err != nil {
 				fmt.Println(err)
-				msg := fmt.Sprintf("An unexpected error occurred: %s", err.Error())
+				msg := fmt.Sprintf(
+					"Unexpected error (decoding request body): %s",
+					err.Error(),
+				)
 				if errors.As(err, &unmarshalTypeError) {
 					msg = fmt.Sprintf(
 						"The %q field value is invalid",
