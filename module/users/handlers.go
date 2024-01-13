@@ -14,7 +14,7 @@ type User struct {
 	IsActive bool   `json:"isActive"`
 }
 
-func getUsers(w http.ResponseWriter, r *http.Request) {
+func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	db := config.DB
 
 	rows, queryErr := db.Query(`
@@ -45,7 +45,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 }

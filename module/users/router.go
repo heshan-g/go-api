@@ -5,5 +5,5 @@ import (
 )
 
 func Router(r chi.Router) {
-	r.Get("/", getUsers)
+	r.Get("/", getUsersHandler)
 }
