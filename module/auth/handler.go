@@ -2,7 +2,6 @@ package auth
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,27 +14,17 @@ type SignInRequestBody struct {
 }
 
 func signInHandler(w http.ResponseWriter, r *http.Request) {
+	body := r.Context().Value("body").(SignInRequestBody)
+
 	url := fmt.Sprintf(
 		"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=%s",
 		os.Getenv("FB_WEB_API_KEY"),
 	)
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-	r.Body.Close()
-
-	signInCreds := r.Context().Value("body").(SignInRequestBody)
-
-	if err := json.Unmarshal(body, &signInCreds); err != nil {
-		panic(err)
-	}
-
 	jsonStr := []byte(fmt.Sprintf(
 		`{"email": "%s", "password": "%s", "returnSecureToken": true}`,
-		signInCreds.Email,
-		signInCreds.Password,
+		body.Email,
+		body.Password,
 	))
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -53,7 +42,6 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	respBody, _ := io.ReadAll(resp.Body)
 	fmt.Println("Response body: ", string(respBody))
 
-	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
 	w.Write(respBody)
 }
