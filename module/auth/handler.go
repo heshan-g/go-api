@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-type SignInCreds struct {
+type SignInRequestBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -26,7 +26,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var signInCreds SignInCreds
+	signInCreds := r.Context().Value("body").(SignInRequestBody)
 
 	if err := json.Unmarshal(body, &signInCreds); err != nil {
 		panic(err)
