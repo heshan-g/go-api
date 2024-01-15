@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/heshan-g/go-api/config"
+	"github.com/heshan-g/go-api/customMiddleware"
 	"github.com/heshan-g/go-api/module/auth"
 	"github.com/heshan-g/go-api/module/users"
 )
@@ -22,12 +23,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Content-Type", "application/json")
-			next.ServeHTTP(w, r)
-		})
-	})
+	r.Use(customMiddleware.SetContentTypeToJson)
 
 	r.Get("/health-check", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Server is healthy\n"))
