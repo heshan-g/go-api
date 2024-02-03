@@ -2,10 +2,14 @@ package auth
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/heshan-g/go-api/config"
 )
 
 type SignInRequestBody struct {
@@ -50,6 +54,36 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
+
+	var firebaseResponseBody struct {
+		LocalId string `json:"localId"`
+	}
+
+	if err = json.Unmarshal(respBody, &firebaseResponseBody); err != nil {
+		msg := fmt.Sprintf("Unexpected error (parsing Firebase response body): %s", err.Error())
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+	// ----------------------------------------
+	now := time.Now()
+	token, err := config.SignJwt(map[string]interface{}{
+		"alg": "RS256",
+		"iss": os.Getenv("FB_SERVICE_ACCOUNT_EMAIL"),
+		"sub": os.Getenv("FB_SERVICE_ACCOUNT_EMAIL"),
+		"aud": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
+		"exp": now.Add(time.Second * 3600).Unix(),
+		"iat": now.Unix(),
+		"uid": firebaseResponseBody.LocalId,
+	})
+	if err != nil {
+		msg := fmt.Sprintf("Unexpected error (signing JWT): %s", err.Error())
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(token)
+	// ----------------------------------------
 
 	w.WriteHeader(resp.StatusCode)
 	w.Write(respBody)
